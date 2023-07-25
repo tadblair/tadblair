@@ -1,40 +1,33 @@
 function [pre_vs_cross] = between_session_analysis_df(a,b,lbl,analysis_results, grp, ylim)
 
-hold on;
-
 shklist=[];
-  %  bar(1:2,mean(analysis_results([grp.shock1 grp.shock2],[a b]))./[1  1]); hold on;
+    bar(1:2,mean(analysis_results([grp.shock1 grp.shock2],[a b]))./[1  1]); hold on;
     for i=grp.shock1
-        %scatter(2,analysis_results(i,[ b])/[1  ],'ok'); 
+        scatter(2,analysis_results(i,[ b])/[1  ],'ok'); hold on;
         shklist=[shklist analysis_results(i,[ b])];
     end
     for i=grp.shock2
-        %scatter(2,analysis_results(i,[ b])/[1  ],'sk'); 
+        scatter(2,analysis_results(i,[ b])/[1  ],'sk'); hold on;
         shklist=[shklist analysis_results(i,[ b])];
     end
 
     barlist=[];
-  %  bar(5:6,mean(analysis_results([7:12],[a b]))./[1  1]); hold on;
+    bar(5:6,mean(analysis_results([7:12],[a b]))./[1  1]); hold on;
     for i=7:12
-        %scatter(6,analysis_results(i,[ b])/[1  ],'db'); 
+        scatter(6,analysis_results(i,[ b])/[1  ],'db'); hold on;
         barlist=[barlist analysis_results(i,[ b])];
     end    
     
     scoplist=[];
-    for i=grp.scpshk(1:2)
-        %scatter(4,analysis_results(i,[ b])/[1  ],'or'); 
-        scoplist=[scoplist analysis_results(i,[ b])];
-    end    
-  %  bar(3:4,mean(analysis_results([17:25],[a b]))./[1  1]); hold on;
-  if length(grp.scpshk)>2
-    for i=grp.scpshk(3:7)
-        %scatter(4,analysis_results(i,[ b])/[1  ],'sr');
+%     for i=[17:20]
+%         scatter(4,analysis_results(i,[ b])/[1  ],'or'); hold on;
+%         scoplist=[scoplist analysis_results(i,[ b])];
+%     end    
+    for i=grp.scpshk
+        scatter(4,analysis_results(i,[ b])/[1  ],'sr'); hold on;
         scoplist=[scoplist analysis_results(i,[ b])];
     end    %     for i=17:25
-  end
-  
-    bar([1 3 5],[mean(shklist) mean(scoplist) mean(barlist)]); hold on;
-    errorbar([1 3 5],[mean(shklist) mean(scoplist) mean(barlist)],[std(shklist)/sqrt(length(shklist)-1) std(scoplist)/sqrt(length(scoplist)-1) std(barlist)/sqrt(length(barlist)-1)]);
+    bar([1 3 5],[mean(shklist) mean(scoplist) mean(barlist)]);
     set(gca,'XLim',[0 7],'YLim',ylim); title(lbl);
     
 %     clf;
@@ -43,7 +36,11 @@ shklist=[];
      pre_vs_cross.df_means=nanmean(analysis_results(grp.shock,[b])); 
      pre_vs_cross.sc_means=nanmean(analysis_results(grp.scpshk,[b]));
      pre_vs_cross.bar_means=nanmean(analysis_results(grp.bar,[b]));
-    
+
+     pre_vs_cross.df_data=(analysis_results(grp.shock,[b])); 
+     pre_vs_cross.sc_data=(analysis_results(grp.scpshk,[b]));
+     pre_vs_cross.bar_data=(analysis_results(grp.bar,[b]));
+
 %     [p1, h]=signrank(analysis_results(grp.shock,a),analysis_results(grp.shock,b));
 %     [p2, h]=signrank(analysis_results(grp.shock,c),analysis_results(grp.shock,b));
 %     [p3, h]=signrank(analysis_results(grp.shock,c),analysis_results(grp.shock,a));

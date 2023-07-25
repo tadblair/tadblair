@@ -1,4 +1,4 @@
-clear;
+clearvars -except topdir
 
 rats_to_analyze=[1:4 6:27];
 shockflag=0;
@@ -7,14 +7,11 @@ placemap_shock=[];
 placemap_barrier=[];
 placemap_scopshock=[];
 
-load 'Behav_effects';
+load 'Behav_effects.mat';
 
-resubsample=false;
-plotbeh=false;
+plotbeh=false; %flag for plotting 3D behavior graphs
 
-maxhighbins=12;
-rundir=0;
-goodpeakbins = 1:23; %bins of allowed place peaks
+maxhighbins=12; %cell fails to be admitted as a place cell if more than this number of spatial bins (out of 23) exceed 70% max firing rate
 minplacescore = 2; %must beat this to count as a place cell (place score is -log10 of median p value from 200 split correlations)
 minspikes = 1; %must beat this to count as a place cell (mean spikes fired per beeline )
 L_zone=2:8; M_zone=9:15; R_zone=16:23; M_wid=3;
@@ -41,15 +38,15 @@ scpost_placecellmap=[];
 barpre_placecellmap=[];
 barpost_placecellmap=[];
 
-finaldir='D:\MiniScopeData\Hipp_LFOV\'; %folder where the goodies are stored
+% finaldir='D:\MiniScopeData\Hipp_LFOV\'; %folder where the goodies are stored
+% 
+% rootdir='D:\MiniScopeData\pvAnalysis\'; %folder where the goodies are stored
+% lineardir='D:\MiniScopeData\Shock_LFOV\'; %folder where the goodies are stored
 
-rootdir='D:\MiniScopeData\pvAnalysis\'; %folder where the goodies are stored
-lineardir='D:\MiniScopeData\Shock_LFOV\'; %folder where the goodies are stored
-
-shockdir='D:\MiniScopeData\Blair_et_al\shocktimes\'; %folder where the goodies are stored
-cellmapdir='D:\MiniScopeData\Blair_et_al\cellmaps\'; %folder where the goodies are stored
-sessiondir='D:\MiniScopeData\Blair_et_al\sessiondata\';
-datadir='D:\MiniScopeData\Blair_et_al\prepost\';
+shockdir=[topdir 'shocktimes\']; %folder where the goodies are stored
+cellmapdir=[topdir 'cellmaps\']; %folder where the goodies are stored
+sessiondir=[topdir 'sessiondata\'];
+datadir=[topdir 'prepost\'];
 
 pethwid = 22; %total width of PETH window is 2*pethwid+1
 
@@ -187,6 +184,8 @@ hm_post_shk_safeR=[];
 hm_post_bar_safeR=[];
 hm_post_scp_safeR=[];
 
+hm_post_shk_group=[];
+
 hm_post_shk_safeL=[];
 hm_post_bar_safeL=[];
 hm_post_scp_safeL=[];
@@ -198,6 +197,12 @@ hm_post_scp_centerz=[];
 hm_post_bar=[];
 hm_pflags_post_bar=[];
 
+hm_shockpost_bar=[];
+hm_shockpost_bar_group=[];
+
+hm_post_bar_group=[];
+hm_post_scpshk_group=[];
+
 hm_shockpost_scpshk=[];
 hm_post_scpshk=[];
 hm_pflags_post_scpshk=[];
@@ -205,49 +210,50 @@ hm_pflags_post_scpshk=[];
 hm_post_scp=[];
 hm_pflags_post_scp=[];
 
-hm_post_shk_group=[];
-hm_post_scpshk_group=[];
-hm_post_bar_group=[];
-
-hm_shockpost_bar=[];
-
 analysis_results=[];
+
+disp([topdir 'fig3_filenames.txt'])
+fid = fopen([topdir 'fig3_filenames.txt'], 'w');
 
 for r=rats_to_analyze %rats_to_analyze %--- loop through rats
     
     r
+
     %need to keep some variables when new rat analysis starts
-    clearvars -except hm_* plotbeh resubsample placemap_* *_placecellmap event_place_cells* shockflag global_p Effects rundir *_zone M_wid maxhighbins goodpeakbins minplacescore minspikes *_segment* Rmatrix* Pmatrix* barriertimes allshockcells* allnonshockcells* SHKexc recur_shock* predata postdata shockdata precol postcol analyze_* data otherdata smear convkernel Decode* TCcorr* Loss* chi* MdlSpec rat* session* analysis* r goodsess s *dir *_result *shocktimes* cellmat* heatmaps* pethwid all_chmat binedges;
+    clearvars -except fid hm_* plotbeh resubsample placemap_* *_placecellmap event_place_cells* shockflag global_p Effects *_zone M_wid maxhighbins minplacescore minspikes *_segment* Rmatrix* Pmatrix* barriertimes allshockcells* allnonshockcells* SHKexc recur_shock* predata postdata shockdata precol postcol analyze_* data otherdata smear convkernel Decode* TCcorr* Loss* chi* MdlSpec rat* session* analysis* r goodsess s *dir *_result *shocktimes* cellmat* heatmaps* pethwid all_chmat binedges;
     
     clear sessionNums;
     
     %read in matching matrix for this rat
     if r<=6 | (r>=13 & r<=16) %drug-free shocks
         
-        load([cellmapdir rat(r).name '_shock_cmap']);
+        baseFileName = [cellmapdir rat(r).name '_shock_cmap'];
         
     elseif r>=17 & r<=25 %scopolamine shocks
         
-        load([cellmapdir rat(r).name '_scopshock_cmap']);
+        baseFileName = [cellmapdir rat(r).name '_scopshock_cmap'];
         
     elseif (r>=7 & r<=12) %barrier
         
-        load([cellmapdir rat(r).name '_barrier_cmap']);
+        baseFileName = [cellmapdir rat(r).name '_barrier_cmap'];
         
     elseif (r<=27) %second drug free shock
         
-        load([cellmapdir rat(r).name '_shock2_cmap']);
+        baseFileName = [cellmapdir rat(r).name '_shock2_cmap'];
         
     else %second drug free shock
         
-        load([cellmapdir rat(r).name '_scopo_cmap']);
+        baseFileName = [cellmapdir rat(r).name '_scopo_cmap'];
         
     end
     
+    load(baseFileName);
+fprintf(fid, '%s\n', baseFileName);
     
     %cmap column indices for the sessions of interest
     pre_column=find(sessionNums==cellmat_shockcols(r,2));
     post_column=find(sessionNums==cellmat_shockcols(r,3));
+
     
     analysis_sessint(r)=cellmat_shockcols(r,3)-cellmat_shockcols(r,2);
     
@@ -255,12 +261,18 @@ for r=rats_to_analyze %rats_to_analyze %--- loop through rats
     load([sessiondir rat(r).name '_linear' num2str(cellmat_shockcols(r,precol)) '_sess']);
     eval(['preframe = frame' num2str(cellmat_shockcols(r,precol)) ';']);
     load([datadir rat(r).name '_linear' num2str(cellmat_shockcols(r,precol)) '_predata']);
+
+fprintf(fid, '%s\n', [sessiondir rat(r).name '_linear' num2str(cellmat_shockcols(r,precol)) '_sess']);
+fprintf(fid, '%s\n', [datadir rat(r).name '_linear' num2str(cellmat_shockcols(r,precol)) '_predata']);
     
     %load shock session data
     postcol=3;
     load([sessiondir rat(r).name '_linear' num2str(cellmat_shockcols(r,postcol)) '_sess']);
     eval(['postframe = frame' num2str(cellmat_shockcols(r,postcol)) ';']);
     load([datadir rat(r).name '_linear' num2str(cellmat_shockcols(r,postcol)) '_postdata']);
+    
+fprintf(fid, '%s\n', [sessiondir rat(r).name '_linear' num2str(cellmat_shockcols(r,postcol)) '_sess']);
+fprintf(fid, '%s\n', [datadir rat(r).name '_linear' num2str(cellmat_shockcols(r,postcol)) '_postdata']);
     
     analysis_beelines(r,:)=[0 0 size(predata.LRint,1) size(predata.RLint,1) size(postdata.LRint,1) size(postdata.RLint,1)];
     
@@ -271,7 +283,7 @@ for r=rats_to_analyze %rats_to_analyze %--- loop through rats
     [post_peak.valLR, post_peak.LRd]=max(squeeze(postdata.dcurve_LR)'); [post_peak.valRL, post_peak.RLd]=max(squeeze(postdata.dcurve_RL)');
     
     clear premaxrateLR premaxrateRL prehighbinsLR prehighbinsRL;
-    for i=1:size(preframe.C,1)
+    for i=1:size(preframe.S,1)
         premaxrateLR(i)=max(predata.dcurve_LR(i,:)*1000);
         premaxrateRL(i)=max(predata.dcurve_RL(i,:)*1000);
         prehighbinsLR(i)=sum(predata.dcurve_LR(i,:)>max(predata.dcurve_LR(i,:))*.7);
@@ -313,6 +325,7 @@ for r=rats_to_analyze %rats_to_analyze %--- loop through rats
     analysis_meanfsize(r,:) = 12*[0 nanmean([prehighbinsLR(predata.isplaceLR_N(:)') prehighbinsRL(predata.isplaceRL_N(:)')]) nanmean([posthighbinsLR(postdata.isplaceLR_N(:)') posthighbinsRL(postdata.isplaceRL_N(:)')])];
     analysis_meanmaxrate(r,:) = [0 nanmean([premaxrateLR(predata.isplaceLR_N(:)') premaxrateRL(predata.isplaceRL_N(:)')]) nanmean([postmaxrateLR(postdata.isplaceLR_N(:)') postmaxrateRL(postdata.isplaceRL_N(:)')])];
     analysis_Nplacecells(r,:) = [0 sum(predata.isplace_N) sum(postdata.isplace_N)];
+    analysis_meanplaceperc(r,:) = [0 mean(sum(predata.isplace_N))/size(predata.dcurve_LR,1) mean(sum(postdata.isplace_N))/size(postdata.dcurve_LR,1)];
         
     clear *matrow *matrowLR *matrowRL;
     preplacematrowLR=[];
@@ -447,6 +460,22 @@ for r=rats_to_analyze %rats_to_analyze %--- loop through rats
     analysis_adjzone(r,:)=[adjM_zoneLR(1) adjM_zoneRL(1)];
     
     adj_zone=unique([adjM_zoneLR adjM_zoneRL]);
+    
+    LR_offdiagpost=0;
+    RL_offdiagpost=0;
+   % N_offdiag=0;
+    diagthresh=5;
+    for i=1:23
+        for j=i:23
+            if abs(i-j)>diagthresh
+                LR_offdiagpost=[LR_offdiagpost; pmatLR_postR(i,j); pmatLR_postR(j,i)]; 
+                RL_offdiagpost=[RL_offdiagpost; pmatRL_postR(i,j); pmatRL_postR(j,i)];
+    %            N_offdiag=N_offdiag+2;
+            end
+        end
+    end
+    LR_offdiagpost=nanmean(LR_offdiagpost);  
+    RL_offdiagpost=nanmean(RL_offdiagpost);     
     
     for i=1:23
         
@@ -653,7 +682,7 @@ for r=rats_to_analyze %rats_to_analyze %--- loop through rats
         hm_post_bar_centerz=[hm_post_bar_centerz; centerz_postR];
     end
     
-    analysis_results(r,:)=[r 0 sum(predata.isplaceLR_N | predata.isplaceRL_N)/length(predata.isplaceLR_N) sum(postdata.isplaceLR_N | postdata.isplaceRL_N)/length(postdata.isplaceLR_N) ...
+    analysis_results(r,:)=[r 0 sum(predata.isplaceLR_N | predata.isplaceRL_N)/length(predata.isplaceLR_N) sum(postdata.isplaceLR_N | postdata.isplaceRL_N)/length(postdata.isplaceLR_N) ... % 1 - 4
         0 sum(predata.isplaceLR_N | predata.isplaceRL_N)  sum(postdata.isplaceLR_N | postdata.isplaceRL_N) ... %5 6 7
         0 nanmedian([predata.dcurve_LR_bps(predata.isplaceLR_N) predata.dcurve_RL_bps(predata.isplaceRL_N)]) nanmedian([postdata.dcurve_LR_bps(postdata.isplaceLR_N) postdata.dcurve_RL_bps(postdata.isplaceRL_N)])... %8 9 10
         0 ... % 11
@@ -721,4 +750,5 @@ for r=rats_to_analyze %rats_to_analyze %--- loop through rats
 end %rat loop -----------------------------------------------------------------------------------------------------------------
 
 
+fclose(fid);
 

@@ -1,33 +1,21 @@
-clear;
+clearvars -except topdir
 
-
-%%%%%%%%%%% DEAL WITH THING WHERE A BARRIER RAT IS USED...SEE BvW CODE %%%%%%%%%%%%
-
-rats_to_analyze=[1:4 6 7:30];
-
-%rats_to_analyze=[1:4 6:14 16:17 20:25 27]; %dfdf rats
+topdir
+rats_to_analyze=[1:4 6 7:27]; %include these rats in the analysis
 
 shockflag=0; %0=ignore shock, 1=select responsive cells, -1=select nonresponsive cells
 shockpolarity=0; %-1=select inhibited cells if shockflag=1 (does nothing if shockflag not -1)
 
-resubsample=false;
-plotbeh=false;
+plotbeh=false; %flag for plotting 3D behavior graphs
 
-maxhighbins=12;
-rundir=0;
-goodpeakbins = 1:23; %bins of allowed place peaks
+maxhighbins=12; %cell fails to be admitted as a place cell if more than this number of spatial bins (out of 23) exceed 70% max firing rate
 minplacescore = 2; %must beat this to count as a place cell (place score is -log10 of median p value from 200 split correlations)
 minspikes = 1; %must beat this to count as a place cell (mean spikes fired per beeline )
-L_zone=1:5; M_zone=9:15; R_zone=19:23; M_wid=3;
 
-% session 15 of Hipp35
+% bin indices for L, M, R segments of moze
+L_zone=1:5; M_zone=9:15; R_zone=19:23; 
 
-smear=1;
-%convkernel=[zeros(1,smear-1) ones(1,smear)]/smear;
-convkernel=ones(1,smear)/smear;
-
-analyze_shock = true;
-
+%gather indiviodual rat results into these variables for statistical comparisons between groups
 analysis_groupLR_pre=[];
 analysis_groupLR_trn=[];
 analysis_groupRL_pre=[];
@@ -48,11 +36,12 @@ scshk_placecellmap=[];
 barpre_placecellmap=[];
 barshk_placecellmap=[];
 
-topdir = 'D:\MiniScopeData\Blair_et_al\'; %top level folder where data files are found
+% topdir = 'D:\Sample Data\Linear Maze Data\tadblair-main\Blair_et_al_DATA'; %top level folder where data files are found
 shockdir=[topdir 'shocktimes\']; %folder where the goodies are stored
 cellmapdir=[topdir 'cellmaps\']; %folder where the goodies are stored
 sessiondir=[topdir 'sessiondata\'];
 datadir=[topdir 'pretrn\'];
+eccdir=[topdir 'presizecc\'];
 
 %load in times of shocks
 load([shockdir 'shocktimes']); %row order: Hipp6, Hipp7, Hipp8, Hipp9, Hipp12, Hipp13, Hipp15, Hipp18, Hipp30, Hipp31, Hipp32, Hipp34-37
@@ -188,8 +177,6 @@ rat(30).shockrow=Inf;
 
 clear heatmaps* all_chmat Loss* Decode* TCcorr*;
 
-sessions_to_analyze = [2 1 3]; %dont use
-
 hm_pre_shk=[];
 hm_shockpre_shk=[];
 hm_shockpost_shk=[];
@@ -235,41 +222,58 @@ hm_post_scp_group=[];
 hm_post_scpshk_group=[];
 hm_post_bar_group=[];
 
+hm_placesize=[];
+hm_placeecc=[];
+hm_notplacesize=[];
+hm_notplaceecc=[];
+
 analysis_results=[];
+
+        hm_dfrecur_placesize=[];
+        hm_dfnonrecur_placesize=[];
+        hm_dfrecur_placeecc=[];
+        hm_dfnonrecur_placeecc=[];
+
+        hm_screcur_placesize=[];
+        hm_scnonrecur_placesize=[];
+        hm_screcur_placeecc=[];
+        hm_scnonrecur_placeecc=[];
 
 for r=rats_to_analyze %rats_to_analyze %--- loop through rats
     
     r
     
     %need to keep some variables when new rat analysis starts
-    clearvars -except hm_* plotbeh resubsample placemap_* *_placecellmap allshockinh* event_place_cells* shockflag global_p Effects rundir *_zone M_wid maxhighbins goodpeakbins minplacescore minspikes *_segment* Rmatrix* Pmatrix* barriertimes allshockcells* allnonshockcells* shockpolarity SHKexc SHKinh recur_shock* predata postdata shockdata precol postcol analyze_* data otherdata smear convkernel Decode* TCcorr* Loss* chi* MdlSpec rat* session* analysis* r goodsess s *dir *_result *shocktimes* cellmat* heatmaps* pethwid all_chmat binedges;
+    clearvars -except hm_* plotbeh placemap_* *_placecellmap allshockinh* event_place_cells* shockflag global_p Effects *_zone maxhighbins minplacescore minspikes *_segment* Rmatrix* Pmatrix* barriertimes allshockcells* allnonshockcells* shockpolarity SHKexc SHKinh recur_shock* predata postdata shockdata precol postcol analyze_* data otherdata convkernel Decode* TCcorr* Loss* chi* MdlSpec rat* session* analysis* r goodsess s *dir *_result *shocktimes* cellmat* heatmaps* pethwid all_chmat binedges;
     
     clear sessionNums;
     
     %read in matching matrix for this rat
     if r<=6 | (r>=13 & r<=16) %drug-free shocks
         
-        load([cellmapdir rat(r).name '_shock_cmap']);
+        baseFileName = [cellmapdir rat(r).name '_shock_cmap'];
         
     elseif r>=17 & r<=25 %scopolamine shocks
         
-        load([cellmapdir rat(r).name '_scopshock_cmap']);
+        baseFileName = [cellmapdir rat(r).name '_scopshock_cmap'];
         
     elseif (r>=7 & r<=12) %barrier
         
-        load([cellmapdir rat(r).name '_barrier_cmap']);
+        baseFileName = [cellmapdir rat(r).name '_barrier_cmap'];
         
     elseif (r<=27) %second drug free shock
         
-        load([cellmapdir rat(r).name '_shock2_cmap']);
+        baseFileName = [cellmapdir rat(r).name '_shock2_cmap'];
         
     else %second drug free shock
         
-        load([cellmapdir rat(r).name '_scopo_cmap']);
+        baseFileName = [cellmapdir rat(r).name '_scopo_cmap'];
         
     end
-    
-    %cmap column indices for the sessions of interest
+
+    load(baseFileName);
+
+    %cell map column indices for matching across sessions
     pre_column=find(sessionNums==cellmat_shockcols(r,1));
     shk_column=find(sessionNums==cellmat_shockcols(r,2));
     
@@ -278,6 +282,9 @@ for r=rats_to_analyze %rats_to_analyze %--- loop through rats
     eval(['preframe = frame' num2str(cellmat_shockcols(r,precol)) ';']);
     load([datadir rat(r).name '_linear' num2str(cellmat_shockcols(r,precol)) '_predata']);
     
+    %size_eccentricity;
+    load([eccdir rat(r).name '_linear' num2str(cellmat_shockcols(r,precol)) '_presizecc'],'cpos','csize','cecc');
+
     %load shock session data
     shkcol=2;
     load([sessiondir rat(r).name '_linear' num2str(cellmat_shockcols(r,shkcol)) '_sess']);
@@ -341,6 +348,8 @@ for r=rats_to_analyze %rats_to_analyze %--- loop through rats
     end
     trndata.numgoodcells = sum(goodcell);
     
+    analysis_Nallcell(r,:) = [predata.numgoodcells size(preframe.deconv,1) trndata.numgoodcells size(trnframe.deconv,1)];
+
     
     % tuning curve properties
     for i=1:size(preframe.deconv,1)
@@ -380,6 +389,23 @@ for r=rats_to_analyze %rats_to_analyze %--- loop through rats
     trndata.isonlyLR_N=trndata.isplaceLR_N & ~trndata.isplaceRL_N;
     trndata.isonlyRL_N=~trndata.isplaceLR_N & trndata.isplaceRL_N;
     
+ if ismember(r,[1:4 6 13:27]) %df and scop only
+hm_placesize=[hm_placesize csize(predata.isplace_N)];
+hm_placeecc=[hm_placeecc cecc(predata.isplace_N)];
+hm_notplacesize=[hm_notplacesize csize(~predata.isplace_N)];
+hm_notplaceecc=[hm_notplaceecc cecc(~predata.isplace_N)];
+ end
+
+ %flip signs of contour stats (recurring place cell will get flipped back
+ %later to identify them)
+csize=-csize;
+cecc=-cecc;
+%drop non place cells
+csize(~predata.isplace_N)=NaN;
+cecc(~predata.isplace_N)=NaN;
+
+
+
     analysis_LRRLboth(r,:)=[sum(predata.isplaceLR_N) sum(predata.isplaceRL_N) sum(predata.isplaceLR_N & predata.isplaceRL_N) sum(trndata.isplaceLR_N) sum(trndata.isplaceRL_N) sum(trndata.isplaceLR_N & trndata.isplaceRL_N)];
     analysis_onlyboth(r,:)=[sum(predata.isboth_N) sum(predata.isonlyLR_N) sum(predata.isonlyRL_N) sum(trndata.isboth_N) sum(trndata.isonlyLR_N) sum(trndata.isonlyRL_N)];
     
@@ -490,6 +516,8 @@ for r=rats_to_analyze %rats_to_analyze %--- loop through rats
         isplace_pre(d) = (isplace_preLR(d) | isplace_preRL(d));
         if isplace_pre(d)
             predata.isrecurringplace(cmap(recur_shockpre_matdex(d),pre_column))=true;
+            csize((cmap(recur_shockpre_matdex(d),pre_column)))=-csize((cmap(recur_shockpre_matdex(d),pre_column)));
+            cecc((cmap(recur_shockpre_matdex(d),pre_column)))=-cecc((cmap(recur_shockpre_matdex(d),pre_column)));
             trndata.isrecurringplace(cmap(recur_shockpre_matdex(d),shk_column))=true;
         end
         nmax=max([hmap_pre(d,:) hmap_shockpre(d,:)]);
@@ -504,7 +532,22 @@ for r=rats_to_analyze %rats_to_analyze %--- loop through rats
     analysis_onlyboth_recur(r,:)=[sum(isplace_preLR & isplace_preRL) sum(isplace_preLR & ~isplace_preRL) sum(~isplace_preLR & isplace_preRL)];
     analysis_field_Nrecur(r,:)=sum(predata.isrecurringplace);
     analysis_field_Nnonrecur(r,:)=sum(predata.isplace_N(:) & ~predata.isrecurringplace(:)) + sum(trndata.isplace_N(:) & ~trndata.isrecurringplace(:));
-    
+
+    rdex=find(csize>0); ndex=find(csize<0);
+
+    if ismember(r,[1:4 6 13:16 26:27])
+        hm_dfrecur_placesize=[hm_dfrecur_placesize csize(rdex)];
+        hm_dfnonrecur_placesize=[hm_dfnonrecur_placesize abs(csize(ndex))];
+        hm_dfrecur_placeecc=[hm_dfrecur_placeecc cecc(rdex)];
+        hm_dfnonrecur_placeecc=[hm_dfnonrecur_placeecc abs(cecc(ndex))];
+    end
+
+    if ismember(r,[17:25])
+        hm_screcur_placesize=[hm_dfrecur_placesize csize(rdex)];
+        hm_scnonrecur_placesize=[hm_dfnonrecur_placesize abs(csize(ndex))];
+        hm_screcur_placeecc=[hm_dfrecur_placeecc cecc(rdex)];
+        hm_scnonrecur_placeecc=[hm_dfnonrecur_placeecc abs(cecc(ndex))];
+    end
     
     for d=1:length(recur_shockpre_matdex)
         hmap_post(d,:)=[trndata.dcurve_LR_part2(cmap(recur_shockpre_matdex(d),shk_column),:) trndata.dcurve_RL_part2(cmap(recur_shockpre_matdex(d),shk_column),:)];

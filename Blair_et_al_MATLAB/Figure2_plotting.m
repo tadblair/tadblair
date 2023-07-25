@@ -1,4 +1,4 @@
-% must run 'Figure2_analysis' prior to executing this script, so
+% must run 'Figure2_analysis' to executing this script, so
 % that relevant variables will exist in the workspace
 
 
@@ -160,6 +160,35 @@ set(gca,'XLim',[.8 5],'YLim',[-12 3],'XTick',[]);
 
 set(gcf,'Name','Figure 2D');
 
+subplot(9,6,[31 32 37 38]-20); hold off;
+
+%mean bars
+bar(1:2,nanmean([analysis_meanplaceperc(df_retain_rats,1)'; analysis_meanplaceperc(df_retain_rats,2)']')); hold on;
+bar(3:4,nanmean([analysis_meanplaceperc(scop_forget_rats,1)'; analysis_meanplaceperc(scop_forget_rats,2)']')); hold on;
+%line and symbol
+plot([df_retain_rats*0+1; df_retain_rats*0+2],[analysis_meanplaceperc(df_retain_rats,1)'; analysis_meanplaceperc(df_retain_rats,2)'],'o-c');
+plot([scop_forget_rats*0+3; scop_forget_rats*0+4],[analysis_meanplaceperc(scop_forget_rats,1)'; analysis_meanplaceperc(scop_forget_rats,2)'],'o-m');
+%females
+plot([grp.shock([1 4 9])*0+1; grp.shock([1 4 9])*0+2],[analysis_meanplaceperc(grp.shock([1 4 9]),1)'; analysis_meanplaceperc(grp.shock([1 4 9]),2)'],'-b');
+plot([grp.scpshk([4 7 8])*0+3; grp.scpshk([4 7 8])*0+4],[analysis_meanplaceperc(grp.scpshk([4 7 8]),1)'; analysis_meanplaceperc(grp.scpshk([4 7 8]),2)'],'-r');
+set(gca,'XLim',[0 5],'YLim',[0 1]);
+
+    datamat=[[analysis_meanplaceperc(df_retain_rats,1); analysis_meanplaceperc(scop_forget_rats,1) ] ...
+             [analysis_meanplaceperc(df_retain_rats,2); analysis_meanplaceperc(scop_forget_rats,2) ]];
+             
+    [placeperc_tbl,rm] = simple_mixed_anova(datamat, between_factors, {'session'}, {'dfscop'}); 
+
+    [h,p_df,ci,stats]=ttest(analysis_meanplaceperc(df_retain_rats,1),analysis_meanplaceperc(df_retain_rats,2))
+    [h,p_sc,ci,stats]=ttest(analysis_meanplaceperc(scop_forget_rats,1),analysis_meanplaceperc(scop_forget_rats,2))
+    
+subplot(9,6,[31 44]-20+12); hold off;
+text(1,1,['2x2 (session): ' num2str(placeperc_tbl{4,5})]);
+text(1,-2,['2x2 (drug): ' num2str(placeperc_tbl{2,5})]);
+text(1,-5,['2x2 (sess x drug): ' num2str(placeperc_tbl{5,5})]);
+text(1,-8,['DF pre v trn: ' num2str(p_df)]);
+text(1,-11,['SC pre v trn: ' num2str(p_sc)]);
+set(gca,'XLim',[.8 5],'YLim',[-12 3],'XTick',[]);
+
 %---------------------------------------------Fig 2E
 
 
@@ -310,12 +339,12 @@ subplot(9,6,[31 32 37 38]-30); hold off;
 
 recur=analysis_field_Nrecur./(analysis_field_Nrecur+analysis_field_Nnonrecur);
 
-bar(1:2,[mean(recur(df_retain_rats)) mean(recur(scop_forget_rats))]); hold on;
+bar(1:2,[mean(recur(df_retain_rats)) nanmean(recur(scop_forget_rats))]); hold on;
 scatter(1+df_retain_rats*0,recur(df_retain_rats),'oc');
 scatter(2+scop_forget_rats*0,recur(scop_forget_rats),'oc');
 set(gca,'XLim',[0 3],'YLim',[0 1]);
 
-[h,p,ci,stats]=ttest2(recur(df_retain_rats),recur(scop_forget_rats))
+[h,p,ci,stats]=ttest2(recur(df_retain_rats),recur(scop_forget_rats(~isnan(recur(scop_forget_rats)))))
 
 subplot(9,6,[31 38]-24+6); hold off;
 text(1,1,['DF v SCP: ' num2str(p)]);
@@ -470,7 +499,7 @@ plot([btwn_df([1:7 9:10])*0+1; wthn_df([1:7 9:10])*0+2],[btwn_df([1:7 9:10]); wt
 plot([btwn_sc([1 4:9])*0+3; wthn_sc([1 4:9])*0+4],[btwn_sc([1 4:9]); wthn_sc([1 4:9])],'o-m');
 plot([btwn_df([1 4 9])*0+1; wthn_df([1 4 9])*0+2],[btwn_df([1 4 9]); wthn_df([1 4 9])],'o-g');
 plot([btwn_sc([4 7 8])*0+3; wthn_sc([4 7 8])*0+4],[btwn_sc([4 7 8]); wthn_sc([4 7 8])],'o-g');
-set(gca,'XLim',[0 5],'YLim',[0 1]);
+set(gca,'XLim',[0 5],'YLim',[-.5 1]);
 
     datamat=[[btwn_df([1:7 9:10])'; btwn_sc([1 4:9])' ] ...
              [wthn_df([1:7 9:10])'; wthn_sc([1 4:9])' ]];

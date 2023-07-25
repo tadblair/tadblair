@@ -176,6 +176,69 @@ set(gca,'XLim',[.8 5],'YLim',[-15 3],'XTick',[]);
         set(gcf,'Name','Figure 3B');  
     
 %--------------- Figure 3C
+figure(39); clf; 
+
+% subplot(2,2,1);
+% [pre_v_cross_peakshift] = between_session_analysis_df(34, 35, 'pshkft', analysis_results, grp, [0 100]);
+
+% LEFT PANEL
+
+subplot(2,2,1);
+hold off; a=2; b=3;
+    bar(1:2,mean(analysis_meanplaceperc([grp.shock1 grp.shock2],[a b]))./[1  1]); hold on;
+    for i=grp.shock1
+        plot(1:2,analysis_meanplaceperc(i,[a b])./[1 1 ],'-ok');     hold on;
+    end
+    for i=grp.shock2
+        plot(1:2,analysis_meanplaceperc(i,[a b])./[1 1 ],'-sk'); 
+    end
+    for i=grp.shockF_retain
+        plot(1:2,analysis_meanplaceperc(i,[a b])./[1 1 ],'-g'); 
+    end
+    
+    bar(5:6,mean(analysis_meanplaceperc([7:12],[a b]))./[1  1]); 
+    hold on;
+    for i=7:12
+        plot(5:6,analysis_meanplaceperc(i,[a b])./[1 1 ],'-db'); 
+    end    
+    for i=[9 10 12]
+        plot(5:6,analysis_meanplaceperc(i,[a b])./[1 1 ],'-g'); 
+    end    
+    
+    bar(3:4,mean(analysis_meanplaceperc([grp.scpshk],[a b]))./[1  1]); 
+    hold on;
+    for i=grp.scpshk(1:2)
+        plot(3:4,analysis_meanplaceperc(i,[a b])./[1 1 ],'-or'); 
+    end    
+    for i=grp.scpshk(3:7)
+        plot(3:4,analysis_meanplaceperc(i,[a b])./[1 1 ],'-sr'); 
+    end    %     for i=17:25
+    for i=grp.scpshkF_forget
+        plot(3:4,analysis_meanplaceperc(i,[a b])./[1 1 ],'-g'); 
+    end    %     for i=17:25
+    set(gca,'XLim',[0 7],'YLim',[0 1]); 
+    
+    between_factors=[ones(1,length(grp.shock)) 2*ones(1,length(grp.scpshk)) 3*ones(1,length(grp.bar))]';
+    
+    datamat=[[analysis_meanplaceperc(grp.shock,a); analysis_meanplaceperc(grp.scpshk,a); analysis_meanplaceperc(grp.bar,a)] ...
+             [analysis_meanplaceperc(grp.shock,b); analysis_meanplaceperc(grp.scpshk,b); analysis_meanplaceperc(grp.bar,b)]];
+             
+    [placeperc_tbl,rm] = simple_mixed_anova(datamat, between_factors, {'sesspair'}, {'traintype'});
+
+    [h,p_df]=ttest(analysis_meanplaceperc(grp.shock,a),analysis_meanplaceperc(grp.shock,b));
+    [h,p_sc]=ttest(analysis_meanplaceperc(grp.scpshk,a),analysis_meanplaceperc(grp.scpshk,b));
+    [h,p_bar]=ttest(analysis_meanplaceperc(grp.bar,a),analysis_meanplaceperc(grp.bar,b));
+
+    subplot(2,2,3);
+text(1,1,['3x2 (train): ' num2str(placeperc_tbl{2,5})]);
+text(1,-2,['3x2 (sess): ' num2str(placeperc_tbl{4,5})]);
+text(1,-5,['train x sess: ' num2str(placeperc_tbl{5,5})]);
+text(1,-8,['DF pre v post: ' num2str(p_df)]);
+text(1,-11,['SC pre v post: ' num2str(p_sc)]);
+text(1,-14,['BAR pre v post: ' num2str(p_bar)]);
+set(gca,'XLim',[.8 5],'YLim',[-15 3],'XTick',[]);
+
+
 
 figure(32); clf; 
 
@@ -491,41 +554,57 @@ text(1,-5,['DF vs BAR: ' num2str(pre_v_cross_safeR.dfbar_upair_cross)]);
 text(1,-8,['SC vs BAR: ' num2str(pre_v_cross_safeR.scbar_unpair_cross)]);
 set(gca,'XLim',[.8 5],'YLim',[-12 3],'XTick',[]);  
 
+t=table([1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 3 3 3 3 3 3]',[pre_v_cross_safeL.df_data; pre_v_cross_safeL.sc_data; pre_v_cross_safeL.bar_data],[pre_v_cross_centerz.df_data; pre_v_cross_centerz.sc_data; pre_v_cross_centerz.bar_data],[pre_v_cross_safeR.df_data; pre_v_cross_safeR.sc_data; pre_v_cross_safeR.bar_data],'VariableNames',{'condition','z1','z2','z3'});
+Meas = table([1 2 3]','VariableNames',{'Zones'});
+rm = fitrm(t,'z1-z3~condition','WithinDesign',Meas);
+ranovatbl = ranova(rm)
 
 sex_order=[1 4 8 2 5 6 7 3 9]; %-drug free shock
 subplot(3,9,[2 3 4]+1);
+try
 boxplot(hm_post_shk_safeL(shkdex,:)','Symbol',''); 
 set(gca,'XLim',[.5 10.5],'YLim',[-.5 1],'XTick','');
+end
 subplot(3,9,[10 11 12]+2);
 boxplot(hm_post_shk_centerz(shkdex(sex_order),:)','Symbol',''); 
 set(gca,'XLim',[.5 10.5],'YLim',[-.5 1],'XTick','');
 subplot(3,9,[18 19 20]+3);
+try
 boxplot(hm_post_shk_safeR(shkdex(sex_order),:)','Symbol',''); 
 set(gca,'XLim',[.5 10.5],'YLim',[-.5 1],'XTick','');
+end
 
 sex_order=[6 2 5 4 3 1 7]; %--scopoalmine shock
 
 subplot(3,9,[5 6]+1);
+try
 boxplot(hm_post_scp_safeL(scpdex(sex_order),:)','Symbol',''); 
 set(gca,'XLim',[.5 7.5],'YLim',[-.5 1],'XTick','');
+end
 subplot(3,9,[13 14]+2);
 boxplot(hm_post_scp_centerz(scpdex(sex_order),:)','Symbol',''); 
 set(gca,'XLim',[.5 7.5],'YLim',[-.5 1],'XTick','');
 subplot(3,9,[21 22]+3);
+try
 boxplot(hm_post_scp_safeR(scpdex(sex_order),:)','Symbol',''); 
 set(gca,'XLim',[.5 7.5],'YLim',[-.5 1],'XTick','');
+end
 
 sex_order=[5 6 3 4 1 2]; %--scopoalmine shock
 
 subplot(3,9,[5 6]+3);
+try
 boxplot(hm_post_bar_safeL(sex_order,:)','Symbol',''); 
 set(gca,'XLim',[-.5 6.5],'YLim',[-.5 1],'XTick','');
+end
 subplot(3,9,[13 14]+4);
 boxplot(hm_post_bar_centerz(sex_order,:)','Symbol',''); 
 set(gca,'XLim',[-.5 6.5],'YLim',[-.5 1],'XTick','');
 subplot(3,9,[21 22]+5);
+try
 boxplot(hm_post_bar_safeR(sex_order,:)','Symbol',''); 
 set(gca,'XLim',[-.5 6.5],'YLim',[-.5 1],'XTick','');
+end
 
     set(gcf,'Name','Figure 3H');    
 

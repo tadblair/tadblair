@@ -1,4 +1,4 @@
-clear;
+clearvars -except topdir;
 
 rats_to_analyze=[1:4 6:27];
 
@@ -82,7 +82,7 @@ scshk_placecellmap=[];
 scpost_placecellmap=[];
 
 
-topdir = 'D:\MiniScopeData\Blair_et_al\'; %top level folder where data files are found
+% topdir = 'D:\MiniScopeData\Blair_et_al\'; %top level folder where data files are found
 shockdir=[topdir 'shocktimes\']; %folder where the goodies are stored
 cellmapdir=[topdir 'cellmaps\']; %folder where the goodies are stored
 sessiondir=[topdir 'sessiondata\'];
@@ -296,7 +296,7 @@ hm_shockpost_scpshk_group=[];
 hm_post_scpshk_group=[];
 
 analysis_results=[];
-
+%%
 for r=rats_to_analyze %rats_to_analyze %--- loop through rats
     
     r
@@ -338,7 +338,7 @@ for r=rats_to_analyze %rats_to_analyze %--- loop through rats
     eval(['preframe = frame' num2str(cellmat_shockcols(r,precol)) ';']);
     load([predir rat(r).name '_linear' num2str(cellmat_shockcols(r,precol)) '_predata']);
     predata.S=preframe.S;
-    predata.C=preframe.C;
+%     predata.C=preframe.C;
     predata.x=preframe.x;
     predata.y=preframe.y;
     predata.time=preframe.time;
@@ -357,7 +357,7 @@ for r=rats_to_analyze %rats_to_analyze %--- loop through rats
     oldpostdata=postdata;
     
     postdata.S=postframe.S;
-    postdata.C=postframe.C;
+%     postdata.C=postframe.C;
     postdata.x=postframe.x;
     postdata.y=postframe.y;
     postdata.time=postframe.time;
@@ -376,7 +376,7 @@ for r=rats_to_analyze %rats_to_analyze %--- loop through rats
     data=trndata;
     clear trndata;
     data.S=trnframe.S;
-    data.C=trnframe.C;
+%     data.C=trnframe.C;
     data.x=trnframe.x;
     data.y=trnframe.y;
     data.time=trnframe.time;
