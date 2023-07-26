@@ -114,13 +114,6 @@ Data was derived from the following sources:
 
 ## pretrn: matched data for comparing before training, 2 session per rat (pre and post) per condition. 'pre' is before training, 'trn' is during training (before shock)
     'predata' structure VARIABLES: pre-training data
-        - info*: per cell, (bits per spike) spatial information along the given direction path
-        - isplace*_N: per cell, does it beat a spatial information shuffle in the given direction
-        - isplace_N: per cell, is it a place cell in either direction (isplaceRL or isplaceLR)
-        - isplace: redundant with 'isplace_N'
-        - isboth: per cell, is it place cell in both directions (isplaceRL and isplaceLR)
-        - isonly*_N: per cell, is only a place cell in the given direction and not in the other
-        - isrecurringplace: per cell, was a place cell in either session of interest and matched across them with CellReg
         - all other fields have the same meaning as the 'predata' in ##prepost data (above)
     'trndata' structure VARIABLES: training data
         - vmap_*: occupancy map in seconds for either direction in the split session halves
@@ -130,7 +123,6 @@ Data was derived from the following sources:
 ## sessiondata: extracted calcium and position data for each session used, ex) Hipp#_session#_sess.mat. When loaded, a frame# structure variable where # corresponds to the session number. These come in sets of 3 per animal per condition they were included in. Each of the three session files corresponds to the sessions that compose the 'predata', 'trndata', and 'postdata' previously described 
     frame# VARIABLES
         - S: [cell by frame#] deconvolved spike times, output from CaImAn analysis (1== spike inferred)
-        - C: [cell by frame#] denoised calcium activity of cell, output from CaImAn analysis (excluded from the very large files, not essential or used in analysis)
         - x & y: x and y position per frame along the rectangular maze in centimeteres
         - time: session time per frame since recording start in milliseconds
         - deconv: [cell by frame#] value of deconvolved spike inference
