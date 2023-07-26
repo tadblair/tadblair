@@ -114,7 +114,7 @@ Data was derived from the following sources:
         - shock_code: shock modulation of cell (1 for significantly excited, -1 for surpressed, 0 for neither)
         - all other fields have the same interpretation as in 'predata'
 
-## presizecc: data files for evaluating cells eccentricity (ecc, radial distance from center) and cell size (csize, in pixels) effect of recurrence or place score. Each file corresponds to an animals recording session, as in 'sessiondata/', and contains the variables:
+## presizecc: data files for evaluating cells eccentricity (ecc, radial distance from center) and cell size (csize, in pixels) effect of recurrence or place score in Figure 2—figure supplement 3. Each file corresponds to an animals recording session, as in 'sessiondata/', and contains the variables:
     'cecc': cell eccentricity from center (cpos) in pixels
     'cpos': center of recoding, in pixels
     'csize': cell size, in pixels
