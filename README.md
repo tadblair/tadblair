@@ -5,7 +5,9 @@ Within the this repository there are two main folder, one for data and one for s
 #### Data files ####
 tadblair-main\Blair_et_al_DATA\
                     |
+                    |-> 'cellmaps\'
                     |-> 'prepost\'
+                    |-> 'presizecc\'
                     |-> 'pretrn\'
                     |-> 'sessiondata\'
                     --> 'shocktimes\'
@@ -111,6 +113,11 @@ Data was derived from the following sources:
     'postdata' structure VARIABLES: post-extinction data
         - shock_code: shock modulation of cell (1 for significantly excited, -1 for surpressed, 0 for neither)
         - all other fields have the same interpretation as in 'predata'
+
+## presizecc: data files for evaluating cells eccentricity (ecc, radial distance from center) and cell size (csize, in pixels) effect of recurrence or place score. Each file corresponds to an animals recording session, as in 'sessiondata/', and contains the variables:
+    'cecc': cell eccentricity from center (cpos) in pixels
+    'cpos': center of recoding, in pixels
+    'csize': cell size, in pixels
 
 ## pretrn: matched data for comparing before training, 2 session per rat (pre and post) per condition. 'pre' is before training, 'trn' is during training (before shock)
     'predata' structure VARIABLES: pre-training data
